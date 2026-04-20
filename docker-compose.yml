@@ -1,0 +1,41 @@
+# docker-compose.yml
+# ─────────────────────────────────────────────────────────────
+# Starts two services:
+#   • app     — the Streamlit UI (port 8501)
+#   • ollama  — local LLM server (port 11434)
+#
+# Usage:
+#   docker compose up --build          # first run (builds image)
+#   docker compose up                  # subsequent runs
+#
+# Pull the model once after first start:
+#   docker exec -it eduagent-ollama ollama pull qwen3.5:9b
+# ─────────────────────────────────────────────────────────────
+
+services:
+  app:
+    build: .
+    container_name: eduagent-app
+    ports:
+      - "8501:8501"
+    environment:
+      # Tells the app to reach Ollama via the Docker service name.
+      - OLLAMA_HOST=http://ollama:11434
+    volumes:
+      # Persist ChromaDB data between container restarts.
+      - chroma_data:/app/chroma_db
+    depends_on:
+      - ollama
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: eduagent-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      # Persist downloaded models between container restarts.
+      - ollama_data:/root/.ollama
+
+volumes:
+  chroma_data:
+  ollama_data:
