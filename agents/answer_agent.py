@@ -27,19 +27,18 @@ _ollama_host = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 llm = OllamaLLM(model="qwen3.5:9b", base_url=_ollama_host)
 
 
-def generate_answer(question: str, chunks: list[str]) -> str:
+def generate_answer(question: str, chunks: list[dict]) -> str:
     """
     Generate an answer grounded in the retrieved document chunks.
 
     Args:
         question: The student's question.
-        chunks:   List of relevant text chunks from rag/pipeline.py.
+        chunks:   List of chunk dicts with keys: text, source_file, page, chunk_index.
 
     Returns:
         A plain-text answer string from the LLM.
     """
-    # Join all chunks into one context block for the prompt.
-    context = "\n\n".join(chunks)
+    context = "\n\n".join(chunk["text"] for chunk in chunks)
 
     prompt = f"""You are a helpful academic assistant.
 Answer the student's question using ONLY the context provided below.

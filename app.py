@@ -18,7 +18,8 @@ import tempfile
 import streamlit as st
 
 from agents.answer_agent import generate_answer
-from rag.pipeline import load_and_index_pdf, search
+from agents.retrieval_agent import retrieve
+from rag.pipeline import load_and_index_pdf
 
 # ── Page config ───────────────────────────────────────────────
 st.set_page_config(page_title="EduAgent", page_icon="📚")
@@ -53,7 +54,7 @@ if st.button("Search"):
     else:
         # Retrieve the top 3 chunks most relevant to the question.
         with st.spinner("Searching the document..."):
-            chunks = search(question)
+            chunks = retrieve(question)
 
         if not chunks:
             st.info("No results found. Make sure you have processed a PDF first.")
@@ -68,5 +69,5 @@ if st.button("Search"):
             # Let the student inspect the source material used.
             with st.expander("Show retrieved source chunks"):
                 for i, chunk in enumerate(chunks, start=1):
-                    st.markdown(f"**Chunk {i}**")
-                    st.write(chunk)
+                    st.markdown(f"**Chunk {i}** — {chunk['source_file']}, page {chunk['page']}")
+                    st.write(chunk["text"])
