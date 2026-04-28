@@ -71,7 +71,7 @@ eduagent/
 │   ├── __init__.py
 │   ├── retrieval_agent.py     ← Zeynep Çavuş (Member 3)  (create from scratch)
 │   ├── answer_agent.py        ← Ezgi (Member 4)  (base exists, needs full build)
-│   ├── monitor_agent.py       ← Aykut Akkuş (Member 5)  (create from scratch)
+│   ├── monitor_agent.py       ← Aykut Akkuş ✅  (create from scratch)
 │   └── evaluator_agent.py     ← Yağız Efe Gökçe (Member 6)  (create from scratch)
 ├── rag/
 │   ├── __init__.py
@@ -86,7 +86,7 @@ eduagent/
 ├── tests/
 │   ├── test_retrieval.py      ← Zeynep Çavuş (Member 3)
 │   ├── test_answer.py         ← Ezgi (Member 4)
-│   ├── test_monitor.py        ← Aykut Akkuş (Member 5)
+│   ├── test_monitor.py        ← Aykut Akkuş ✅ 
 │   ├── test_evaluator.py      ← Yağız Efe Gökçe (Member 6)
 │   └── test_integration.py   ← Yağız Efe Gökçe (Member 6)
 ├── data/                      ← sample PDFs for testing (all members)
