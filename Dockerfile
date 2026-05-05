@@ -18,7 +18,7 @@ EXPOSE 8501
 
 # --server.fileWatcherType none  → disables file-watcher warnings
 # --server.address 0.0.0.0      → makes the app reachable outside the container
-CMD ["streamlit", "run", "app.py", \
+CMD ["streamlit", "run", "ui/app.py", \
      "--server.address=0.0.0.0", \
      "--server.port=8501", \
      "--server.fileWatcherType=none"]

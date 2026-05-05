@@ -11,8 +11,9 @@ venv/
 # ChromaDB data (generated at runtime)
 chroma_db/
 
-# Streamlit cache
-.streamlit/
+# Streamlit cache & secrets (keep config.toml)
+.streamlit/cache/
+.streamlit/secrets.toml
 
 # OS
 .DS_Store

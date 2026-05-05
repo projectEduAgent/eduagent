@@ -9,7 +9,7 @@
 #   docker compose up                  # subsequent runs
 #
 # Pull the model once after first start:
-#   docker exec -it eduagent-ollama ollama pull qwen3.5:9b
+#   docker exec -it eduagent-ollama ollama pull qwen2.5:7b
 # ─────────────────────────────────────────────────────────────
 
 services:

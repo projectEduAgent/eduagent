@@ -1,163 +1,132 @@
-# EduAgent — RAG Pipeline & Vektör Veritabanı
+# EduAgent — Multi-Agent Academic Assistant
 
-Bu belge, EduAgent projesinin **RAG Pipeline & Vektör Veritabanı** bileşenini açıklamaktadır.
+EduAgent is a multi-agent academic assistant built for students and researchers. Users upload PDF documents; the system chunks, embeds, and stores them in a local vector database. When a student asks a question, four specialized agents work in sequence to produce a high-quality, grounded, verified answer.
 
----
-
-## Genel Bakış
-
-Öğrenciler bir PDF yükler, sistem bu belgeyi parçalara ayırır, vektöre dönüştürür ve ChromaDB'de saklar. Öğrenci soru sorduğunda, en alakalı parçalar bulunur ve yerel bir LLM (Ollama) bu parçalara dayanarak cevap üretir.
-
-```
-PDF Yükleme → Parçalara Ayırma → Embedding → ChromaDB
-                                                  ↓
-Öğrenci Sorusu → Benzerlik Araması → İlgili Parçalar → Ollama LLM → Cevap
-```
+The agent pipeline is: **Retrieval** → **Answer Generation** → **Monitor** → **Evaluation**. If the monitor flags safety issues or the evaluator score falls below the threshold, the orchestrator automatically retries answer generation (up to two attempts). The final answer, confidence score, and source chunks are presented in a clean Streamlit chat interface.
 
 ---
 
-## Dosya Yapısı
+## System Architecture
 
 ```
-eduagent/
-├── rag/
-│   ├── pipeline.py     ← Diğer agent'ların kullandığı tek giriş noktası
-│   ├── loader.py       ← PDF okuma ve parçalara ayırma
-│   ├── embedder.py     ← Embedding oluşturma ve ChromaDB'ye kaydetme
-│   └── retriever.py    ← ChromaDB'den benzer parçaları getirme
-├── agents/
-│   └── answer_agent.py ← Ollama LLM ile cevap üretme
-├── app.py              ← Streamlit web arayüzü
-├── Dockerfile          ← Docker image tanımı
-├── docker-compose.yml  ← App + Ollama servislerini ayağa kaldırır
-└── requirements.txt    ← Python bağımlılıkları
+┌─────────────────────────────────────────────────────────────────────┐
+│                         USER (Streamlit UI)                         │
+│   Upload PDF  ──►  Process  ──►  Ask Question  ──►  Read Answer    │
+└─────────────────────────┬───────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│              orchestrator/pipeline.py  (Member 1)                   │
+│  Ties all agents together. Calls them in sequence, passes outputs. │
+└──┬──────────────────────────────────────────────────────────────────┘
+   │
+   │  Step 1
+   ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│           RAG Pipeline  (Kerem — Member 2) ✅ COMPLETE              │
+│  rag/pipeline.py  →  load_and_index_pdf()  /  search()             │
+│  Internally: loader → embedder → ChromaDB → retriever              │
+└──┬──────────────────────────────────────────────────────────────────┘
+   │  Step 2
+   ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│              Answer Agent  (Member 4 — Ezgi)                        │
+│  agents/answer_agent.py                                             │
+│  Builds a rich prompt → calls Ollama LLM → returns answer string   │
+└──┬──────────────────────────────────────────────────────────────────┘
+   │  Step 3
+   ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│              Monitor Agent  (Member 5 — Aykut Akkuş)               │
+│  agents/monitor_agent.py                                            │
+│  Checks answer for hallucinations, safety, source grounding        │
+└──┬──────────────────────────────────────────────────────────────────┘
+   │  Step 4
+   ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│              Evaluator Agent  (Member 6 — Yağız Efe Gökçe)         │
+│  agents/evaluator_agent.py                                          │
+│  Scores answer on Relevance / Accuracy / Completeness (0-10)       │
+│  Triggers retry loop if score < threshold (max 2 retries)          │
+└──┬──────────────────────────────────────────────────────────────────┘
+   │
+   ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│              Streamlit UI  (Member 7 — Zeynep Uygur)                │
+│  ui/app.py                                                          │
+│  Chat bubbles, score badge, source expander, session history       │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Teknoloji Yığını
+## Quick Start (Docker)
 
-| Bileşen | Teknoloji |
-|---|---|
-| PDF Okuma | LangChain `PyPDFLoader` |
-| Metin Parçalama | LangChain `RecursiveCharacterTextSplitter` |
-| Embedding Modeli | `all-MiniLM-L6-v2` (HuggingFace, yerel) |
-| Vektör Veritabanı | ChromaDB (yerel dosya tabanlı) |
-| LLM | Ollama `qwen3.5:9b` (yerel) |
-| Web Arayüzü | Streamlit |
-| Konteyner | Docker + Docker Compose |
-
-> İnternet bağlantısı veya API anahtarı gerekmez. Her şey yerel çalışır.
-
----
-
-## Diğer Agent'lar İçin Kullanım
-
-Monitor, Evaluator veya başka bir agent ekleyecekseniz sadece şu iki fonksiyonu import edin:
-
-```python
-from rag.pipeline import load_and_index_pdf, search
-
-# PDF'i indeksle (bir kez yapılır)
-load_and_index_pdf("belge.pdf")
-
-# Soru için en alakalı 3 parçayı getir
-chunks = search("Q-Learning nedir?")
-# chunks → ["Q-Learning bir pekiştirmeli öğrenme...", ...]
-```
-
-`loader.py`, `embedder.py` veya `retriever.py` dosyalarını **doğrudan import etmeyin** — her şey `pipeline.py` üzerinden geçmeli.
-
----
-
-## Kurulum ve Çalıştırma
-
-### Docker ile (Önerilen)
+The fastest way to run EduAgent is with Docker Compose. It starts the Streamlit app and a local Ollama server.
 
 ```bash
-# 1. Servisleri ayağa kaldır
+# Build and start
 docker compose up --build
 
-# 2. İlk çalıştırmada modeli indir (bir kez yapılır)
-docker exec -it eduagent-ollama ollama pull qwen3.5:9b
-
-# 3. Tarayıcıda aç
-# http://localhost:8501
+# In another terminal, pull the LLM model
+docker exec -it eduagent-ollama ollama pull qwen2.5:7b
 ```
 
-### Yerel Geliştirme (Docker olmadan)
+Then open http://localhost:8501 in your browser.
+
+---
+
+## Quick Start (Local)
+
+Requires Python 3.12 and Ollama installed locally.
 
 ```bash
-# 1. Sanal ortam oluştur
-python -m venv .venv
-.venv\Scripts\activate        # Windows
-# source .venv/bin/activate   # Mac/Linux
+# 1. Install Ollama and pull the model
+ollama pull qwen2.5:7b
 
-# 2. Bağımlılıkları yükle
+# 2. Create a virtual environment
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+# 3. Install dependencies
 pip install -r requirements.txt
 
-# 3. Ollama'yı başlat ve modeli indir
-ollama serve
-ollama pull qwen3.5:9b
+# 4. Run the Streamlit UI
+streamlit run ui/app.py
+```
 
-# 4. Uygulamayı çalıştır
-streamlit run app.py
+Then open http://localhost:8501 in your browser.
+
+---
+
+## Running Tests
+
+Unit tests mock the LLM so they do not require Ollama running. Integration tests skip gracefully if Ollama is unavailable.
+
+```bash
+pytest tests/ -v
+```
+
+With coverage:
+
+```bash
+pytest tests/ -v --cov=agents --cov=rag --cov=orchestrator --cov-report=term-missing
 ```
 
 ---
 
-## Nasıl Kullanılır
+## Team
 
-1. Tarayıcıda `http://localhost:8501` adresini aç
-2. **"Choose a PDF file"** ile bir PDF yükle
-3. **"Process PDF"** butonuna tıkla — PDF parçalanır ve ChromaDB'ye kaydedilir
-4. Soru kutusuna soruyu yaz
-5. **"Search"** butonuna tıkla — cevap ekrana gelir
-
----
-
-## RAG Pipeline Nasıl Çalışır?
-
-### 1. İndeksleme (PDF Yüklenince)
-
-```
-PDF
- └─► PyPDFLoader        → sayfa sayfa okur
-      └─► TextSplitter  → 500 karakterlik parçalara böler (50 karakter örtüşme)
-           └─► HuggingFaceEmbeddings  → her parçayı vektöre dönüştürür
-                └─► ChromaDB         → vektörleri diske kaydeder
-```
-
-### 2. Arama (Soru Sorulunca)
-
-```
-Soru
- └─► HuggingFaceEmbeddings  → soruyu vektöre dönüştürür
-      └─► ChromaDB           → en benzer 3 parçayı bulur
-           └─► Ollama LLM    → parçalar + soru → cevap üretir
-```
+| Member | Role |
+|--------|------|
+| Murat | Project Manager & Orchestrator Developer |
+| Kerem | RAG Pipeline Developer |
+| Zeynep Çavuş | Retrieval Agent & Vector DB Specialist |
+| Ezgi | Answer Agent Developer |
+| Aykut Akkuş | Monitor Agent Developer |
+| Yağız Efe Gökçe | Evaluator Agent & Test Lead |
+| Zeynep Uygur | UI/UX Developer |
 
 ---
 
-## Ortam Değişkenleri
-
-| Değişken | Varsayılan | Açıklama |
-|---|---|---|
-| `OLLAMA_HOST` | `http://localhost:11434` | Ollama sunucu adresi. Docker'da otomatik `http://ollama:11434` olarak ayarlanır. |
-
----
-
-## Bağımlılıklar
-
-```
-streamlit
-langchain
-langchain-community
-langchain-huggingface
-langchain-chroma
-langchain-ollama
-chromadb
-sentence-transformers
-pypdf
-python-dotenv
-```
+*EduAgent — 7-Person Team · April 2026*

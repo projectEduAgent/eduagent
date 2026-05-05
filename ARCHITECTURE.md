@@ -154,7 +154,7 @@ evaluate_answer(
 
 ---
 
-### Member 1 — Project Manager & Orchestrator Developer - Murat
+### Member 1 — Project Manager & Orchestrator Developer - Murat ✅ COMPLETE
 
 **Your job:** You own the glue. `orchestrator/pipeline.py` is the brain that calls all four agents in order and handles the retry loop when the evaluator score is low.
 
@@ -259,10 +259,10 @@ assert result["answer"]
 ```
 
 #### Checklist
-- [ ] GitHub repo with branch strategy
-- [ ] `orchestrator/pipeline.py` with retry loop
-- [ ] README.md complete
-- [ ] Smoke test script
+- [x] GitHub repo with branch strategy
+- [x] `orchestrator/pipeline.py` with retry loop
+- [x] README.md complete
+- [x] Smoke test script
 - [ ] Sprint planning (use GitHub Projects, create 4 milestone columns)
 
 ---
@@ -441,13 +441,13 @@ def test_search_empty_query():
 ```
 
 #### Checklist
-- [ ] `agents/retrieval_agent.py` created — `retrieve()` function working
-- [ ] `retrieve("")` returns empty list without crashing
-- [ ] Embedding singleton (no model reload per call)
-- [ ] Metadata (source_file, page, chunk_index) stored in ChromaDB
-- [ ] `clear_collection()` / `clear_index()` working
-- [ ] `retriever.py` returns metadata (after team agreement on contract change)
-- [ ] `tests/test_retrieval.py` passing
+- [x] `agents/retrieval_agent.py` created — `retrieve()` function working
+- [x] `retrieve("")` returns empty list without crashing
+- [x] Embedding singleton (no model reload per call)
+- [x] Metadata (source_file, page, chunk_index) stored in ChromaDB
+- [x] `clear_collection()` / `clear_index()` working
+- [x] `retriever.py` returns metadata (after team agreement on contract change)
+- [x] `tests/test_retrieval.py` passing
 
 #### Completed Work — Zeynep Çavuş
 
@@ -572,11 +572,11 @@ def test_generate_answer_empty_chunks():
 ```
 
 #### Checklist
-- [ ] `generate_answer()` signature unchanged (backward compatible)
-- [ ] Turkish + English prompt templates
-- [ ] Language auto-detection
-- [ ] Prompt includes all chunks as context block
-- [ ] `tests/test_answer.py` — all tests pass without Ollama (use mocks)
+- [x] `generate_answer()` signature unchanged (backward compatible)
+- [x] Turkish + English prompt templates
+- [x] Language auto-detection
+- [x] Prompt includes all chunks as context block
+- [x] `tests/test_answer.py` — all tests pass without Ollama (use mocks)
 
 ---
 
@@ -747,12 +747,12 @@ def test_result_structure():
 ```
 
 #### Checklist
-- [ ] `check_answer()` returns exact dict contract
-- [ ] Safety pattern matching (regex)
-- [ ] Source grounding check (overlap heuristic)
-- [ ] Refusal detection
-- [ ] Logging for flagged answers
-- [ ] `tests/test_monitor.py` — all pass without LLM
+- [x] `check_answer()` returns exact dict contract
+- [x] Safety pattern matching (regex)
+- [x] Source grounding check (overlap heuristic)
+- [x] Refusal detection
+- [x] Logging for flagged answers
+- [x] `tests/test_monitor.py` — all pass without LLM
 
 ---
 
@@ -931,12 +931,12 @@ echo "Coverage report at htmlcov/index.html"
 ```
 
 #### Checklist
-- [ ] `evaluate_answer()` returns exact dict contract with `score`
-- [ ] JSON parsing with fallback (LLM sometimes returns markdown)
-- [ ] `tests/test_evaluator.py` — all pass without Ollama (use mocks)
-- [ ] `tests/test_integration.py` — skips gracefully if Ollama not running
-- [ ] pytest + coverage configured
-- [ ] Coverage target: ≥ 70% across agents/ and rag/
+- [x] `evaluate_answer()` returns exact dict contract with `score`
+- [x] JSON parsing with fallback (LLM sometimes returns markdown)
+- [x] `tests/test_evaluator.py` — all pass without Ollama (use mocks)
+- [x] `tests/test_integration.py` — skips gracefully if Ollama not running
+- [x] pytest + coverage configured
+- [x] Coverage target: ≥ 70% across agents/ and rag/
 
 ---
 
@@ -1091,15 +1091,15 @@ Coordinate with Kerem if Docker config needs to change.
 - Add a "New Conversation" button that clears history without re-indexing
 
 #### Checklist
-- [ ] `ui/app.py` — full chat bubble interface
-- [ ] Session history persists across messages in same session
-- [ ] Score badge rendered per answer
-- [ ] Score breakdown expander
-- [ ] Source chunks expander
-- [ ] Monitor flags displayed as warning
-- [ ] Sidebar: upload, process, status
-- [ ] Color theme configured
-- [ ] Docker command updated to point at `ui/app.py`
+- [x] `ui/app.py` — full chat bubble interface
+- [x] Session history persists across messages in same session
+- [x] Score badge rendered per answer
+- [x] Score breakdown expander
+- [x] Source chunks expander
+- [x] Monitor flags displayed as warning
+- [x] Sidebar: upload, process, status
+- [x] Color theme configured
+- [x] Docker command updated to point at `ui/app.py`
 
 ---
 
@@ -1119,19 +1119,19 @@ Coordinate with Kerem if Docker config needs to change.
 | `docker-compose.yml` | ✅ | Correct OLLAMA_HOST env var |
 | `requirements.txt` | ✅ | All dependencies listed |
 
-### Open questions for Kerem
+### Open questions for Kerem — ANSWERED
 
-The team needs your answers before building on top of your pipeline:
+The questions below have been resolved during implementation. They are kept here for reference.
 
-**Q1 — Model name:** Your code uses `qwen3.5:9b` but this model name does not exist on Ollama hub. Did you mean `qwen2.5:7b`? Please confirm the correct name so everyone pulls the same model.
+**Q1 — Model name:** ✅ Resolved. The codebase uses `qwen2.5:7b` everywhere (agents, tests, docker-compose comments). Update your local Ollama with `ollama pull qwen2.5:7b`.
 
-**Q2 — File naming:** The project spec says `document_loader.py` but you named it `loader.py`. The spec says `vectorstore.py` but you embedded ChromaDB directly in `embedder.py`. This is fine — but Zeynep Çavuş (Member 3) needs to know: should we keep your naming or create `vectorstore.py` as a thin wrapper?
+**Q2 — File naming:** ✅ Resolved. The team kept Kerem's naming (`loader.py`, `embedder.py`, `retriever.py`). No additional wrappers were needed.
 
-**Q3 — Collection isolation:** Currently all PDFs share one ChromaDB collection (`"eduagent_docs"`). If a student uploads PDF A, then PDF B, the old chunks from PDF A are still in the DB. Is this intentional (multi-doc search) or should uploading a new PDF clear the old one? The team needs to decide this before Zeynep Çavuş implements `clear_collection()`.
+**Q3 — Collection isolation:** ✅ Resolved. `rag/embedder.py` provides `clear_collection()` and `rag/pipeline.py` exposes it as `clear_index()`. The UI and integration tests call `clear_index()` before indexing a new PDF, so old chunks are wiped. Multi-doc indexing is still possible by skipping `clear_index()`.
 
-**Q4 — Metadata:** `retriever.py` returns plain strings. The UI wants to show "Source: lecture3.pdf, page 5". Did you store any metadata during embedding, or does Zeynep Çavuş need to add that from scratch?
+**Q4 — Metadata:** ✅ Resolved. `rag/embedder.py` stores `source_file`, `page`, and `chunk_index` on every chunk. `rag/retriever.py` returns these fields in `retrieve_top_chunks()`. The UI shows source metadata.
 
-**Q5 — Return type change:** If Zeynep Çavuş changes `retrieve_top_chunks()` to return `list[dict]` (adding metadata), this breaks your `pipeline.py` `search()` function and Ezgi's `generate_answer()`. Are you OK owning that migration, or should Zeynep Çavuş create a new `search_with_metadata()` function alongside the original `search()`?
+**Q5 — Return type change:** ✅ Resolved. `search()` now returns `list[dict]` with `text`, `source_file`, `page`, `chunk_index`. All downstream agents (`answer_agent.py`, `monitor_agent.py`, `evaluator_agent.py`) have been updated to handle dict chunks gracefully, including backward-compatible string chunk support.
 
 ---
 
@@ -1147,7 +1147,7 @@ Before the final demo, confirm every item below works end-to-end:
 - [ ] Score breakdown expander shows three numbers
 - [ ] Monitor flags appear if triggered
 - [ ] Chat history persists within the session
-- [ ] `pytest tests/ -v` runs with ≥ 70% of unit tests passing (Ollama-dependent tests skip)
+- [x] `pytest tests/ -v` runs with ≥ 70% of unit tests passing (Ollama-dependent tests skip)
 - [ ] `pytest tests/test_integration.py` passes when Ollama is running
 
 ---
