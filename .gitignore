@@ -15,6 +15,10 @@ chroma_db/
 .streamlit/cache/
 .streamlit/secrets.toml
 
+# Test artifacts
+.coverage
+.pytest_cache/
+
 # OS
 .DS_Store
 Thumbs.db
